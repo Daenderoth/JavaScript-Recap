@@ -1,2 +1,2 @@
-# JavaScript-Recap
-A short recap of various JavaScript functionalities.
+# Internship Tasks
+Various tasks/projects completed during my internship period.
