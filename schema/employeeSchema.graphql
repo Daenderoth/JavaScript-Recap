@@ -1,12 +1,16 @@
 type Query {
     employees: [Employee],
-    employee(name: String!): Employee
+    employee(name: String!): Employee,
+    projects: [Project]
 }
 
 type Mutation {
     createEmployee(name: String, email: String, address: String, hireDate: DateTime, salary: Int, jobTitle: String): Employee,
     updateEmployee(id: String, name: String, email: String, address: String, hireDate: DateTime, salary: Int, jobTitle: String): Employee
-    removeEmployee(id: String): Employee
+    removeEmployee(id: String): Employee,
+    createProject(projectName: String, startDate: DateTime, plannedEndDate: DateTime, description: String, projectCode: String): Project,
+    updateProject(id: String, projectName: String, startDate: DateTime, plannedEndDate: DateTime, description: String, projectCode: String, employees: [String]): Project,
+    removeProject(id: String): Project
 }
 
 type Employee {
@@ -16,5 +20,16 @@ type Employee {
     address: String,
     hireDate: DateTime,
     salary: Int,
-    jobTitle: String
+    jobTitle: String,
+    project: Project
+}
+
+type Project {
+    id: ID,
+    projectName: String,
+    startDate: DateTime,
+    plannedEndDate: DateTime,
+    description: String,
+    projectCode: String,
+    employees: [Employee]
 }
