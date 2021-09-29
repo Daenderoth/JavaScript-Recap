@@ -1,11 +1,19 @@
 const Employee = require('../models/employeeModel');
+const Project = require('../models/projectModel');
 
 const Query = {
+
+    // Employees
     employees: () => {
-        return Employee.find().exec();
+        return Employee.find().populate('project').exec();
     },
     employee: (parent, {name}, context, info) => {
-        return Employee.findOne({name: name}).exec();
+        return Employee.findOne({name: name}).populate('project').exec();
+    },
+
+    // Projects
+    projects: () => {
+        return Project.find().populate('employees').exec();
     }
   }
 
@@ -49,6 +57,62 @@ const Mutation = {
     // DELETE
     removeEmployee: (parent, {id}, context, info) => {
         return Employee.findByIdAndDelete(id).exec();
+    },
+
+    // Project mutations
+
+    // POST
+    createProject: (parent, {projectName, startDate, plannedEndDate, description, projectCode}, context, info) => {
+
+        let project = new Project();
+        project.projectName = projectName;
+        project.startDate = startDate;
+        project.plannedEndDate = plannedEndDate;
+        project.description = description;
+        project.projectCode = projectCode;
+
+        console.log(project);
+
+        return project.save();
+
+        // project.save((err, proj) => {
+        //     if(err){
+        //         return err;
+        //     }
+        //     return proj;
+        // });
+    },
+
+    // PUT
+    updateProject: async (parent, {id, projectName, startDate, plannedEndDate, description, projectCode, employees}, context, info) => {
+        
+        let proj;
+        
+        if(employees)
+        {
+            proj = await Project.findByIdAndUpdate(id, {$addToSet: {'employees': {$each: employees}}}).exec();
+            console.log(proj);
+        }
+
+        else 
+        {
+            proj = await Project.findById(id).exec();
+        }
+
+        projectName ? proj.projectName = projectName : proj.projectName = proj.projectName;
+        startDate ? proj.startDate = startDate : proj.startDate = proj.startDate;
+        plannedEndDate ? proj.plannedEndDate = plannedEndDate : proj.plannedEndDate = proj.plannedEndDate;
+        description ? proj.description = description : proj.description = proj.description;
+        projectCode ? proj.projectCode = projectCode : proj.projectCode = proj.projectCode;
+
+        return proj.save();
+        
+    },
+
+    // DELETE
+    removeProject: async (parent, {id}, context, info) => {
+        await Project.findByIdAndRemove(id).exec();
+        return Employee.updateMany({}, {$pull: {projects: id}}).exec();
     }
 }
   
