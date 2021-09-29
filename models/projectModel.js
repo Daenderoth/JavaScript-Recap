@@ -20,6 +20,7 @@ var projectSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    employees: [{type: mongoose.Schema.Types.ObjectId, ref: 'employees'}],
     created_at: {
         type: Date,
         default: Date.now
