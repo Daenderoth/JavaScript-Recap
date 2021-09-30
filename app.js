@@ -3,6 +3,9 @@ const { ApolloServer, gql } = require('apollo-server-express');
 const fs = require ('fs');
 const mongoose = require('mongoose');
 const { DateTimeResolver, DateTimeTypeDefinition } = require('graphql-scalars')
+const { buildFederatedSchema } = require('@apollo/federation');
+
+
 
 // Server config
 const PORT = 4000;
@@ -16,6 +19,12 @@ const typeDefs = [DateTimeTypeDefinition, gql(fs.readFileSync('./schema/employee
 const resolvers = require('./resolvers/employeeResolver');
 
 const server = new ApolloServer({typeDefs, resolvers});
+
+// Apollo Federation stuff
+// const server = new ApolloServer({
+//     schema: buildFederatedSchema([{ typeDefs: typeDefs, resolvers: resolvers }])
+//   });
+  
 
 const startServer = async () => {
     await server.start();
