@@ -127,7 +127,11 @@ const Mutation = {
     // DELETE
     removeProject: async (parent, {id}, context, info) => {
         await Project.findByIdAndRemove(id).exec();
-        return Employee.updateMany({}, {$pull: {projects: id}}).exec();
+
+        // This worked in case an employee could have more than one project at a time
+        // return Employee.updateMany({}, {$pull: {projects: id}}).exec();
+
+        return Employee.updateMany({project: id}, {$unset: {project: 1}}).exec();
     }
 }
   
