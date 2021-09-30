@@ -91,6 +91,21 @@ const Mutation = {
         if(employees)
         {
             proj = await Project.findByIdAndUpdate(id, {$addToSet: {'employees': {$each: employees}}}).exec();
+            
+            if(Array.isArray(employees)) // We must also add the project to the employee document, for each employee
+            {
+                employees.forEach(async (employee) => {
+                    await Employee.findByIdAndUpdate(employee, {project: id}).exec();
+                });
+
+                // This is faster but does not work correctly for some reason. :(
+                // await Employee.updateMany({'id': {$in: employees}}, {project: id}).exec();
+            }
+            else
+            {
+                await Employee.findByIdAndUpdate(employees, {project: id}).exec();
+            }
+
             console.log(proj);
         }
 
