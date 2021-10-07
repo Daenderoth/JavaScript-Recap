@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Employee = require('../models/employeeModel');
 const Project = require('../models/projectModel');
 
@@ -42,7 +43,7 @@ const Mutation = {
     },
 
     // PUT
-    updateEmployee: async (parent, {id, name, email, address, hireDate, salary, jobTitle}, context, info) => {
+    updateEmployee: async (parent, {id, name, email, address, hireDate, salary, jobTitle, project}, context, info) => {
         let emp = await Employee.findById(id).exec();
         name ? emp.name = name : emp.name = emp.name;
         email ? emp.email = email : emp.email = emp.email;
@@ -51,7 +52,27 @@ const Mutation = {
         salary ? emp.salary = salary : emp.salary = emp.salary;
         jobTitle ? emp.jobTitle = jobTitle : emp.jobTitle = emp.jobTitle;
 
-        return emp.save();
+        let projToDelete = emp.project;
+
+        project ? emp.project = project : emp.project = null;
+
+        if(project) {
+            if(emp.project != projToDelete)
+            {
+                await Project.findByIdAndUpdate(projToDelete, {$pull: {employees: id}}).exec();
+            }
+            
+            await Project.findByIdAndUpdate(project, {$addToSet: {employees: id}}, {new: true}).exec();
+        }
+        else
+        {
+            let test = await Project.findByIdAndUpdate(projToDelete, {$pull: {employees: id}}).exec();
+            console.log(test);
+        }
+
+        return emp.save().then((doc) => {
+            return Employee.findById(id).populate('project').exec();
+        });
     },
 
     // DELETE
@@ -99,7 +120,7 @@ const Mutation = {
                 });
 
                 // This is faster but does not work correctly for some reason. :(
-                // await Employee.updateMany({'id': {$in: employees}}, {project: id}).exec();
+                // await Employee.updateMany({'_id': {$in: employees}}, {project: id}).exec();
             }
             else
             {
@@ -120,18 +141,20 @@ const Mutation = {
         description ? proj.description = description : proj.description = proj.description;
         projectCode ? proj.projectCode = projectCode : proj.projectCode = proj.projectCode;
 
-        return proj.save();
+        return proj.save().then(newProj => {
+            return Project.findById(id).populate('employees').exec();
+        });
         
     },
 
     // DELETE
     removeProject: async (parent, {id}, context, info) => {
-        await Project.findByIdAndRemove(id).exec();
 
         // This worked in case an employee could have more than one project at a time
         // return Employee.updateMany({}, {$pull: {projects: id}}).exec();
 
-        return Employee.updateMany({project: id}, {$unset: {project: 1}}).exec();
+        await Employee.updateMany({project: id}, {$unset: {project: 1}}).exec();
+        return Project.findByIdAndRemove(id).exec();
     }
 }
   
