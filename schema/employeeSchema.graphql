@@ -6,7 +6,7 @@ type Query {
 
 type Mutation {
     createEmployee(name: String, email: String, address: String, hireDate: DateTime, salary: Int, jobTitle: String): Employee,
-    updateEmployee(id: String, name: String, email: String, address: String, hireDate: DateTime, salary: Int, jobTitle: String): Employee
+    updateEmployee(id: String, name: String, email: String, address: String, hireDate: DateTime, salary: Int, jobTitle: String, project: String): Employee
     removeEmployee(id: String): Employee,
     createProject(projectName: String, startDate: DateTime, plannedEndDate: DateTime, description: String, projectCode: String): Project,
     updateProject(id: String, projectName: String, startDate: DateTime, plannedEndDate: DateTime, description: String, projectCode: String, employees: [String]): Project,
