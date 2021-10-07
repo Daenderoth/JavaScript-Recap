@@ -16,35 +16,6 @@ const client = new ApolloClient({
     cache: new InMemoryCache()
   });
 
-// GET
-const GetEmployees = () => {
-    const [employees, setEmployees] = useState([]);
-    const { loading, error, data } = useQuery(EMPLOYEES, {onCompleted: () => {
-        setEmployees(data.employees);
-    }});
-
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error :(</p>;
-
-    return (
-        <EmployeeList employees={employees} setEmployees={setEmployees}></EmployeeList>
-    )
-}
-
-const GetProjects = () => {
-    const [projects, setProjects] = useState([]);
-    const { loading, error, data } = useQuery(PROJECTS, {onCompleted: () => {
-        setProjects(data.projects);
-    }});
-
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error :(</p>;
-
-    return (
-        <ProjectList projects={projects} setProjects={setProjects}></ProjectList>
-    )
-}
-
 const App = () => {
 
     const [employees, setEmployees] = useState([]);
@@ -76,7 +47,6 @@ const App = () => {
         </Switch>
     );
 }
-
 
 ReactDOM.render(
     <ApolloProvider client={client}>
