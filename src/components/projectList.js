@@ -1,6 +1,6 @@
 import React from 'react';
 import { gql, useMutation, useQuery } from "@apollo/client";
-import { REMOVE_PROJECT, ADD_PROJECT, UPDATE_PROJECT } from '../queries';
+import { REMOVE_PROJECT, ADD_PROJECT, UPDATE_PROJECT, EMPLOYEES } from '../queries';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEraser, faPencilAlt, faPlus } from '@fortawesome/free-solid-svg-icons'
 
@@ -31,6 +31,20 @@ const ProjectList = (props) => {
 
         // Updating the UI
         props.setProjects([...existingProjects]);
+
+        // Also need to update the employees
+        let emps = JSON.parse(JSON.stringify(props.employees));
+        for (const index in emps)
+        {
+            if(emps[index].project)
+            {
+                if(emps[index].project.id == proj.id)
+                {
+                    emps[index].project = null;
+                }
+            }
+        }
+        props.setEmployees(emps);
     };
 
     // Function to be executed when successfully modifying a project
