@@ -6,6 +6,8 @@ import { faEraser, faPencilAlt, faPlus } from '@fortawesome/free-solid-svg-icons
 
 const ProjectList = (props) => {
 
+    let headers = { "Authorization": "Bearer " + props.user.token };
+
     // Function to be executed when successfully adding a project
     const updatePageOnCreate = (cache, {data}) => {
         
@@ -67,13 +69,13 @@ const ProjectList = (props) => {
     const [state, setState] = React.useState({showModal: false, showUpdateModal: false});
 
     // Mutation for removing project
-    const [removeProject, {data, loading, error}] = useMutation(REMOVE_PROJECT, {update: updatePageOnDelete});
+    const [removeProject, {data, loading, error}] = useMutation(REMOVE_PROJECT, {context: {headers}, update: updatePageOnDelete});
 
     // Modal component
     const AddProjectModal = (props) => {
         let projectName, startDate, plannedEndDate, description, projectCode;
         // Mutation for adding new employee
-        const [addProject, { data, loading, error }] = useMutation(ADD_PROJECT, {update: updatePageOnCreate, onError: (err) => {
+        const [addProject, { data, loading, error }] = useMutation(ADD_PROJECT, {context: {headers}, update: updatePageOnCreate, onError: (err) => {
             console.log(err)
         }});
         // if (loading) return 'Submitting...';
@@ -144,7 +146,7 @@ const ProjectList = (props) => {
         let projectName, startDate, plannedEndDate, description, projectCode;
 
         // Mutation for updating project
-        const [updateProject, { data, loading, error }] = useMutation(UPDATE_PROJECT, {update: updatePageOnUpdate, onError: (err) => {
+        const [updateProject, { data, loading, error }] = useMutation(UPDATE_PROJECT, {context: {headers}, update: updatePageOnUpdate, onError: (err) => {
             console.log(err)
         }});
 
@@ -170,6 +172,7 @@ const ProjectList = (props) => {
     
                 }>
                     <div class='form-row'>
+                        <label>Project Name</label>
                         <input type='text' defaultValue={state.project.projectName} placeholder='Project Name' ref={ newName => {
                             projectName = newName;
                         }} autoFocus/>
@@ -190,12 +193,14 @@ const ProjectList = (props) => {
                     </div>
     
                     <div class='form-row'>
+                        <label>Project Description</label>
                         <input type='text' defaultValue={props.project.description} placeholder='Project Description' ref={ newDescription => {
                             description = newDescription;
                         }}/>
                     </div>
 
                     <div class='form-row'>
+                        <label>Project Code</label>
                         <input type='text' defaultValue={props.project.projectCode} placeholder='Project Code' ref={ newProjectCode => {
                             projectCode = newProjectCode;
                         }}/>
@@ -228,10 +233,13 @@ const ProjectList = (props) => {
                 <div class="header bg-white">
                     <h4 class="header-title">Projects</h4>
                     <div class="header-button-section">
-                    <span onClick={() => {setState({showModal: true, showUpdateModal: false});}} class="fa fa-plus bttn bttn-small bttn-add">
-                            <FontAwesomeIcon icon={faPlus}/>
-                        </span>
-                        {/* <button class="bttn bttn-save">SAVE</button> */}
+                        { props.user.isAdmin ? 
+                            <span onClick={() => {setState({showModal: true, showUpdateModal: false});}} class="fa fa-plus bttn bttn-small bttn-add">
+                                <FontAwesomeIcon icon={faPlus}/>
+                            </span>
+                            : null
+                        }
+                        
                     </div>
                 </div>
 
@@ -259,9 +267,13 @@ const ProjectList = (props) => {
                     <div class="cell cell-full">
 
                     </div>
-                    <div class="cell cell-100p">
-                        EDIT
-                    </div>
+                    { props.user.isAdmin ? 
+                        <div class="cell cell-100p">
+                            EDIT
+                        </div>    
+                        : null
+                    }   
+                    
                 </div>
 
                 {
@@ -294,22 +306,26 @@ const ProjectList = (props) => {
                             <div class="cell cell-full">
 
                             </div>
-                            <div class="cell cell-100p">
-                                <span class="fa fa-pencil bttn bttn-small bttn-edit" onClick={() => {
-                                    setState({showModal: false, showUpdateModal: true, project: project});
-                                }}>
-                                    <FontAwesomeIcon icon={faPencilAlt}/>
-                                </span>
-                                <span class="fa fa-remove bttn bttn-small bttn-remove" onClick={() => {
-                                    removeProject({
-                                        variables: {
-                                            removeProjectId: project.id
-                                        }
-                                    });
-                                }}>
-                                    <FontAwesomeIcon icon={faEraser}/>
-                                </span>
-                            </div>
+                            { props.user.isAdmin ? 
+                                <div class="cell cell-100p">
+                                    <span class="fa fa-pencil bttn bttn-small bttn-edit" onClick={() => {
+                                        setState({showModal: false, showUpdateModal: true, project: project});
+                                    }}>
+                                        <FontAwesomeIcon icon={faPencilAlt}/>
+                                    </span>
+                                    <span class="fa fa-remove bttn bttn-small bttn-remove" onClick={() => {
+                                        removeProject({
+                                            variables: {
+                                                removeProjectId: project.id
+                                            }
+                                        });
+                                    }}>
+                                        <FontAwesomeIcon icon={faEraser}/>
+                                    </span>
+                                </div>
+                                : null
+                            }
+
                         </div>
                     ))
                 }

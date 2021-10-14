@@ -36,8 +36,8 @@ const PROJECTS = gql`
 
 // MUTATIONS
 const ADD_EMPLOYEE = gql`
-    mutation CreateEmployeeMutation($createEmployeeName: String, $createEmployeeEmail: String, $createEmployeeAddress: String, $createEmployeeHireDate: DateTime, $createEmployeeSalary: Int, $createEmployeeJobTitle: String) {
-        createEmployee(name: $createEmployeeName, email: $createEmployeeEmail, address: $createEmployeeAddress, hireDate: $createEmployeeHireDate, salary: $createEmployeeSalary, jobTitle: $createEmployeeJobTitle) {
+    mutation CreateEmployeeMutation($createEmployeeName: String, $createEmployeeEmail: String, $createEmployeeAddress: String, $createEmployeeHireDate: DateTime, $createEmployeeSalary: Int, $createEmployeeJobTitle: String, $project: String) {
+        createEmployee(name: $createEmployeeName, email: $createEmployeeEmail, address: $createEmployeeAddress, hireDate: $createEmployeeHireDate, salary: $createEmployeeSalary, jobTitle: $createEmployeeJobTitle, project: $project) {
             id
             name
             email
@@ -45,6 +45,10 @@ const ADD_EMPLOYEE = gql`
             hireDate
             salary
             jobTitle
+            project {
+                id
+                projectName
+            }
         }
     }
 `;
@@ -126,4 +130,21 @@ const REMOVE_PROJECT = gql`
     }
 `;
 
-export {EMPLOYEES, PROJECTS, ADD_EMPLOYEE, REMOVE_EMPLOYEE, UPDATE_EMPLOYEE, ADD_PROJECT, REMOVE_PROJECT, UPDATE_PROJECT};
+// AUTH 
+const REGISTER_USER = gql`
+    mutation RegisterMutation($username: String!, $email: String!, $password: String!, $role: String) {
+        register(username: $username, email: $email, password: $password, role: $role) {
+            message
+            statusCode
+        }
+    }
+`;
+
+const AUTHENTICATE_USER = gql`
+    mutation AuthenticateMutation($authenticateEmail: String!, $authenticatePassword: String!) {
+        authenticate(email: $authenticateEmail, password: $authenticatePassword)
+        }
+`;
+
+
+export {EMPLOYEES, PROJECTS, ADD_EMPLOYEE, REMOVE_EMPLOYEE, UPDATE_EMPLOYEE, ADD_PROJECT, REMOVE_PROJECT, UPDATE_PROJECT, REGISTER_USER, AUTHENTICATE_USER};

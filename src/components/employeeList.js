@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { gql, useMutation, useQuery } from "@apollo/client";
-import { ADD_EMPLOYEE, EMPLOYEES, REMOVE_EMPLOYEE, PROJECTS, UPDATE_EMPLOYEE} from '../queries';
+import React from 'react';
+import { useMutation } from "@apollo/client";
+import { ADD_EMPLOYEE, REMOVE_EMPLOYEE, UPDATE_EMPLOYEE} from '../queries';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEraser, faPencilAlt, faPlus } from '@fortawesome/free-solid-svg-icons'
-import Select from 'react-select';
-
 
 const EmployeeList = (props) => {
+
+    let headers = { "Authorization": "Bearer " + props.user.token };
 
     // Function to be executed when successfully adding an employee
     const updatePageOnCreate = (cache, {data}) => {
@@ -14,11 +14,19 @@ const EmployeeList = (props) => {
         const existingEmployees = [...props.employees]
         
         const newEmp = data.createEmployee;
-        const newEmpCopy = {...newEmp, project: null};
+        const newEmpCopy = {...newEmp, project: newEmp.project ? newEmp.project : null};
         console.log(newEmpCopy);
     
         // Updating the UI
-        props.setEmployees([...existingEmployees, newEmpCopy]);
+        props.addEmployee(newEmpCopy);
+
+        // Also updating Projects page UI
+        let projs = JSON.parse(JSON.stringify(props.projects));
+
+        let projToUpdateIndex = projs.findIndex(proj => proj.id == newEmp.project.id);
+        projs[projToUpdateIndex].employees.push({__typename: 'Employee', name: newEmp.name});
+        props.setProjects(projs);
+
         setState({showModal: false, showUpdateModal: false});
     
       };
@@ -109,19 +117,36 @@ const EmployeeList = (props) => {
 
         // Updating the UI
         props.setEmployees([...existingEmployees]);
+
+        // Updating UI for projects page
+        let projs = JSON.parse(JSON.stringify(props.projects));
+
+        // Deleting employee from project
+        projs.forEach((proj) => {
+                
+            for (const empToDelIndex in proj.employees)
+            {
+                if(proj.employees[empToDelIndex].name == emp.name)
+                {
+                    proj.employees.splice(empToDelIndex, 1);
+                    props.setProjects(projs);
+                }
+            }
+
+        });
     };
 
     // Component state management
     const [state, setState] = React.useState({showModal: false, showUpdateModal: false});
 
     // Mutation for removing employee
-    const [removeEmployee, {data, loading, error}] = useMutation(REMOVE_EMPLOYEE, {update: updatePageOnDelete});
+    const [removeEmployee, {data, loading, error}] = useMutation(REMOVE_EMPLOYEE, {context: {headers}, update: updatePageOnDelete});
 
     // Modal component
     const AddEmployeeModal = (props) => {
-        let name, email, address, hireDate, salary, jobTitle;
+        let name, email, address, hireDate, salary, jobTitle, projectId;
         // Mutation for adding new employee
-        const [addEmployee, { data, loading, error }] = useMutation(ADD_EMPLOYEE, {update: updatePageOnCreate, onError: (err) => {
+        const [addEmployee, { data, loading, error }] = useMutation(ADD_EMPLOYEE, {context:{headers}, update: updatePageOnCreate, onError: (err) => {
             console.log(err)
         }});
         // if (loading) return 'Submitting...';
@@ -139,7 +164,8 @@ const EmployeeList = (props) => {
                                 createEmployeeAddress: address.value,
                                 createEmployeeHireDate: hireDate.value,
                                 createEmployeeSalary: parseInt(salary.value),
-                                createEmployeeJobTitle: jobTitle.value
+                                createEmployeeJobTitle: jobTitle.value,
+                                project: projectId.value
                             }
                         });
                     }
@@ -181,6 +207,22 @@ const EmployeeList = (props) => {
                             jobTitle = newJobTitle;
                         }}/>
                     </div>
+
+                    <div class='form-row'>
+                        <label>Current Project</label>
+                        <select ref={ newProjectId => {
+                            projectId = newProjectId;
+                        }}>
+                            <option value=''>-</option>
+
+                            {props.projects.map(project => {
+
+                                return <option value={project.id}>{project.projectName} - {project.projectCode}</option>
+                                
+                            })}
+
+                        </select>
+                    </div>
                         
                     <div class='form-button-container'>
                         <button class='bttn'>
@@ -198,7 +240,7 @@ const EmployeeList = (props) => {
         
         let name, email, address, hireDate, salary, jobTitle, projectId;
         // Mutation for updating employee
-        const [updateEmployee, { data, loading, error }] = useMutation(UPDATE_EMPLOYEE, {update: updatePageOnUpdate, onError: (err) => {
+        const [updateEmployee, { data, loading, error }] = useMutation(UPDATE_EMPLOYEE, {context: {headers}, update: updatePageOnUpdate, onError: (err) => {
             console.log(err)
         }});
         // if (loading) return 'Submitting...';
@@ -225,18 +267,21 @@ const EmployeeList = (props) => {
     
                 }>
                     <div class='form-row'>
+                        <label>Employee Name</label>
                         <input type='text' defaultValue={props.employee.name} placeholder='Employee Name' ref={ newName => {
                             name = newName;
                         }} autoFocus/>
                     </div>
     
                     <div class='form-row'>
+                        <label>Employee Email</label>
                         <input type='text' defaultValue={props.employee.email} placeholder='Employee Email' ref={ newEmail => {
                             email = newEmail;
                         }}/>
                     </div>
     
                     <div class='form-row'>
+                        <label>Employee Address</label>
                         <input type='text' defaultValue={props.employee.address} placeholder='Employee Address' ref={ newAddress => {
                             address = newAddress;
                         }}/>
@@ -250,18 +295,21 @@ const EmployeeList = (props) => {
                     </div>
 
                     <div class='form-row'>
+                        <label>Employee Salary</label>
                         <input type='text' defaultValue={props.employee.salary} placeholder='Employee Salary' ref={ newSalary => {
                             salary = newSalary;
                         }}/>
                     </div>
     
                     <div class='form-row'>
+                        <label>Employee Job Title</label>
                         <input type='text' defaultValue={props.employee.jobTitle} placeholder='Employee Job Title' ref={ newJobTitle => {
                             jobTitle = newJobTitle;
                         }}/>
                     </div>
 
                     <div class='form-row'>
+                        <label>Current Project</label>
                         <select ref={ newProjectId => {
                             projectId = newProjectId;
                         }}>
@@ -300,7 +348,7 @@ const EmployeeList = (props) => {
             }
         }}>
             
-            { state.showModal ? <AddEmployeeModal setEmployees={props.setEmployees}></AddEmployeeModal> : null }
+            { state.showModal ? <AddEmployeeModal projects={props.projects} setEmployees={props.setEmployees}></AddEmployeeModal> : null }
             { state.showUpdateModal ? <UpdateEmployeeModal projects={props.projects} setEmployees={props.setEmployees} employee={state.employee}></UpdateEmployeeModal> : null }
 
             <div class="table">
@@ -308,10 +356,13 @@ const EmployeeList = (props) => {
                 <div class="header bg-white">
                     <h4 class="header-title">Employees</h4>
                     <div class="header-button-section">
-                        <span onClick={() => {setState({showModal: true, showUpdateModal: false});}} class="fa fa-plus bttn bttn-small bttn-add">
-                            <FontAwesomeIcon icon={faPlus}/>
-                        </span>
-                        {/* <button class="bttn bttn-save">SAVE</button> */}
+                        { props.user.isAdmin ? 
+                            <span onClick={() => {setState({showModal: true, showUpdateModal: false});}} class="fa fa-plus bttn bttn-small bttn-add">
+                                <FontAwesomeIcon icon={faPlus}/>
+                            </span> 
+                        : null
+                        }
+                        
                     </div>
                 </div>
 
@@ -336,9 +387,12 @@ const EmployeeList = (props) => {
                     <div class="cell cell-full">
 
                     </div>
-                    <div class="cell cell-100p">
-                        EDIT
-                    </div>
+                    { props.user.isAdmin ? 
+                        <div class="cell cell-100p">
+                            EDIT
+                        </div>
+                    : null}
+                    
                 </div>
 
                 {
@@ -362,7 +416,7 @@ const EmployeeList = (props) => {
                             <div class="cell cell-full">
 
                             </div>
-                            <div class="cell cell-100p">
+                            { props.user.isAdmin ? <div class="cell cell-100p">
                                 <span class="fa fa-pencil bttn bttn-small bttn-edit" onClick={() => {setState({showModal: false, showUpdateModal: true, employee: employee})}}>
                                     <FontAwesomeIcon icon={faPencilAlt}/>
                                 </span>
@@ -375,7 +429,9 @@ const EmployeeList = (props) => {
                                 }}>
                                     <FontAwesomeIcon icon={faEraser}/>
                                 </span>
-                            </div>
+                            </div> 
+                            : null }
+                            
                         </div>
                     ))
                 }
