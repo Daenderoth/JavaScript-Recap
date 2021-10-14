@@ -5,13 +5,23 @@ type Query {
 }
 
 type Mutation {
-    createEmployee(name: String, email: String, address: String, hireDate: DateTime, salary: Int, jobTitle: String): Employee,
+    createEmployee(name: String, email: String, address: String, hireDate: DateTime, salary: Int, jobTitle: String, project: String): Employee,
     updateEmployee(id: String, name: String, email: String, address: String, hireDate: DateTime, salary: Int, jobTitle: String, project: String): Employee
     removeEmployee(id: String): Employee,
     createProject(projectName: String, startDate: DateTime, plannedEndDate: DateTime, description: String, projectCode: String): Project,
     updateProject(id: String, projectName: String, startDate: DateTime, plannedEndDate: DateTime, description: String, projectCode: String, employees: [String]): Project,
-    removeProject(id: String): Project
+    removeProject(id: String): Project,
+    # For authentication/registration
+    register(username: String!, email: String!, password: String!, role: String): ResponseStatus,
+    authenticate(email: String!, password: String!): String
 }
+
+type ResponseStatus {
+    message: String,
+    statusCode: Int
+}
+
+# union OperationResponse = Message | JSONObject
 
 type Employee {
     id: ID,
